@@ -7,10 +7,10 @@ const userSchema = new mongoose.Schema({
     password : {type : String, required : true},
     bio: { type: String, default: "" },
     avatar: { type: String, default: "" },
-    otp: { type: String }, // store OTP temporarily
-    otpExpires: { type: Date }, // OTP expiry
-    resetOtp: { type: String },
-    resetOtpExpires: { type: Date },
+    // otp: { type: String }, // store OTP temporarily
+    // otpExpires: { type: Date }, // OTP expiry
+    // resetOtp: { type: String },
+    // resetOtpExpires: { type: Date },
     isVerified: { type: Boolean, default: false }, // mark after OTP verification
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },

@@ -2,18 +2,26 @@ import { findUserByEmail, findUserByEmailAndPassword, createUser } from "../micr
 import User from "../models/User.js";
 import { signToken } from "../utils/helper.js";
 import crypto from 'crypto'
-import {sendMail} from "../utils/mailer.js"; // your nodemailer setup
 import bcrypt from 'bcrypt';
+import Otp from "../models/Otp.js";
+import { sendMail } from "../utils/mailer.js";
 
 
 export const registerUser = async(name,email,password) => {
     const user = await findUserByEmail(email);
     if(user) throw Error('User already exists');
     
-    const newUser = await createUser(name,email,password);
-    const otp = newUser.otp;
-    const token = signToken({id : newUser._id});
-    return {token, user: newUser, otp};
+    // generate OTP
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const otpExpires = Date.now() + 5 * 60 * 1000;
+
+    // upsert OTP record (if user requests again, overwrite old OTP)
+    await Otp.findOneAndUpdate(
+      { email },
+      { name, email, password, otp, otpExpires },
+      { upsert: true, new: true }
+    );
+    return {otp, email};
 }
 
 export const loginUser = async(email,password) => {
@@ -55,9 +63,13 @@ export const forgot_password = async (email) => {
   if (!user) return { success: false, message: "User not found" };
 
   const otp = crypto.randomInt(100000, 999999).toString();
-  user.resetOtp = otp;
-  user.resetOtpExpires = Date.now() + 5 * 60 * 1000; // 5 min expiry
-  await user.save();
+  const otpExpires = Date.now() + 5 * 60 * 1000;
+
+  await Otp.findOneAndUpdate(
+    { email: user.email, type: "reset" },
+    { userId: user._id, email: user.email, otp, otpExpires, type: "reset" },
+    { upsert: true, new: true }
+  );
 
   await sendMail(
     user.email,
@@ -70,25 +82,52 @@ export const forgot_password = async (email) => {
 
 
 export const reset_password = async (email, otp, newPassword) => {
+  const otpRecord = await Otp.findOne({ email, type: "reset" });
+  if (!otpRecord) return { success: false, message: "No OTP found, request again" };
+
+  if (otpRecord.otp !== otp) return { success: false, message: "Invalid OTP" };
+  if (otpRecord.otpExpires < Date.now())
+    return { success: false, message: "OTP expired" };
+
+  // Find user
   const user = await User.findOne({ email });
   if (!user) return { success: false, message: "User not found" };
 
-  if (!user.resetOtp || !user.resetOtpExpires) {
-    return { success: false, message: "No OTP found, request again" };
-  }
-
-  if (user.resetOtp !== otp) return { success: false, message: "Invalid OTP" };
-  if (user.resetOtpExpires < Date.now()) return { success: false, message: "OTP expired" };
-
   user.password = newPassword;
-
-  // Clear reset fields
-  user.resetOtp = null;
-  user.resetOtpExpires = null;
   await user.save();
+
+  // Delete OTP record after success
+  await Otp.deleteOne({ email, type: "reset" });
 
   return { success: true, message: "Password reset successful" };
 };
 
 
-// $2b$10$KhijU5H7HY2SuTZX7y0FaO7VX8JE4IejIQ16ogsWwgwNVROGvHwFG
+
+export const verify_Otp = async (email, otp) => {
+  const otpRecord = await Otp.findOne({ email });
+  if (!otpRecord){
+    throw Error("OTP not found or expired")
+  };
+
+  if(otpRecord.otp !== otp){
+    throw Error("Invalid OTP")
+  };
+
+  if(otpRecord.otpExpires < Date.now()){
+    throw Error("OTP expired")
+  };
+
+  const name = otpRecord.name;
+  const newUserEmail = otpRecord.email;
+  const password = otpRecord.password;
+
+  const newUser = await createUser(name,newUserEmail,password);
+  const token = signToken({id : newUser._id});
+  // issue token
+  console.log('Token set successfully',token);
+  
+  // delete OTP record
+  await Otp.deleteOne({ email });
+  return { token, user: newUser };
+};

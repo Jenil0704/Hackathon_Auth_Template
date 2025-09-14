@@ -1,6 +1,6 @@
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { verifyOtp } from "../api/auth.js";
 
 export default function VerifyOTP() {
   const [email, setEmail] = useState(""); // user email
@@ -10,15 +10,9 @@ export default function VerifyOTP() {
 
   const handleVerifyOTP = async () => {
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/verify-otp", {
-        email,
-        otp,
-      }, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const res = await verifyOtp(email, otp);
       navigate('/');
+      console.log(res);
       // alert(res.data.message);
     } catch (err) {
       console.error(err.response?.data || err.message);

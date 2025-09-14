@@ -1,4 +1,4 @@
-import { registerUser, loginUser, reset_password, forgot_password } from "../services/authServices.js"
+import { registerUser, loginUser, verify_Otp, reset_password, forgot_password } from "../services/authServices.js"
 import { cookieOptions } from "../config/config.js";
 import HttpError from "../utils/HttpError.js";
 import User from "../models/User.js";
@@ -7,19 +7,10 @@ import {sendMail} from "../utils/mailer.js"; // your nodemailer setup
 const register_user = async(req,res,next)=> {
     const {name, email, password} = req.body;
     try{
-        const {token, user, otp} = await registerUser(name,email,password);
-        req.user = user;
-        
-        console.log("Registration - Setting cookie with token:", token);
-        console.log("Registration - Cookie options:", cookieOptions);
-        
+        const {otp, email : userEmail} = await registerUser(name,email,password);
         // Send OTP email
-        await sendMail(user.email, "Your OTP Code", `Your OTP is: ${otp}`);
-
-        res.cookie("accessToken", token, cookieOptions);
-        
-        console.log("Registration - Cookie set successfully");
-        res.status(200).json({message : "Registration Successful"});
+        await sendMail(userEmail, "Your OTP Code", `Your OTP is: ${otp}`);
+        res.status(200).json({message : "OTP Sent Successfully. Please verify to complete registration."});
     }
     catch(error){
         return next(HttpError.badRequest(error.message || "Registration failed"));
@@ -51,32 +42,19 @@ const logout_user = async(req,res)=> {
 };
 
 
-const verify_otp = async (req, res) => {
+const verifyOtp = async (req, res) => {
+  const { email, otp } = req.body;
   try {
-    const { email, otp } = req.body;
+    const {token, user} = await verify_Otp(email, otp);
+    req.user = user;
 
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    console.log("Verify Token - Setting cookie with token:", token);
+    console.log("Verify Token - Cookie options:", cookieOptions);
 
-    if (!user.otp || !user.otpExpires) {
-      return res.status(400).json({ message: "No OTP found. Request again." });
-    }
+    res.cookie("accessToken", token, cookieOptions);
+    console.log('Token Set Sucessfully in controller', token)
 
-    if (user.otp !== otp) {
-      return res.status(400).json({ message: "Invalid OTP" });
-    }
-
-    if (user.otpExpires < Date.now()) {
-      return res.status(400).json({ message: "OTP expired" });
-    }
-
-    // ✅ OTP verified
-    user.isVerified = true;
-    user.otp = null;
-    user.otpExpires = null;
-    await user.save();
-
-    res.json({ message: "OTP verified successfully" });
+    res.status(200).json({ message: "User verified & registered successfully", user });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -110,7 +88,7 @@ export default {
     register_user,
     login_user,
     logout_user,
-    verify_otp,
+    verifyOtp,
     resetPassword,
     forgotPassword
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import { resetPassword } from "../api/auth.js";
 
 const ResetPassword = () => {
   const [email, setEmail] = useState("");
@@ -10,11 +10,7 @@ const ResetPassword = () => {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/reset-password", {
-        email,
-        otp,
-        newPassword,
-      });
+      const res = await resetPassword(email, otp, newPassword)
       setMessage(res.data.message);
     } catch (err) {
       setMessage(err.response?.data?.message || "Something went wrong");
