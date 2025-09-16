@@ -1,5 +1,5 @@
 import express from 'express';
-import connectDB from './src/config/mongo.config.js';
+// import connectDB from './src/config/mongo.config.js';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import authRoutes from './src/routes/authRoutes.js';
@@ -9,6 +9,7 @@ import productRoutes from './src/routes/productRoutes.js';
 import uploadRoutes from './src/routes/uploadRoutes.js';
 import path from 'path';
 import { notFound, errorHandler } from './src/middlewares/errorHandlers.js';
+import pool from './src/config/db.js';
 
 const app = express();
 
@@ -42,7 +43,12 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(5000, () => {
-    connectDB();
-    console.log('App running on port 5000');
-})
+app.listen(5000, async () => {
+  try {
+    await pool.query("SELECT NOW()"); // quick test query
+    console.log("✅ PostgreSQL connection is active");
+  } catch (error) {
+    console.error("❌ PostgreSQL connection failed:", error.message);
+  }
+  console.log("🚀 App running on port 5000");
+});

@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axiosInstance from '../utils/axiosInstance'
 import { getPublicProducts } from '../api/product'
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
+
 const Dashboard = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -43,20 +37,6 @@ const Dashboard = () => {
         </div>
       )}
       {/* <LoadingSpinner fullscreen text="Loading Products" size={48} thickness={6} color='#10b981' /> */}
-      <div className=' h-[50vh] '>
-        <Carousel>
-  <CarouselContent>
-    <CarouselItem className="md:basis-1/2 lg:basis-1/3">1</CarouselItem>
-    <CarouselItem className="md:basis-1/2 lg:basis-1/3">2</CarouselItem>
-    <CarouselItem className="md:basis-1/2 lg:basis-1/3">3</CarouselItem>
-    <CarouselItem className="md:basis-1/2 lg:basis-1/3">1</CarouselItem>
-    <CarouselItem className="md:basis-1/2 lg:basis-1/3">2</CarouselItem>
-    <CarouselItem className="md:basis-1/2 lg:basis-1/3">3</CarouselItem>
-  </CarouselContent>
-  <CarouselPrevious/>
-  <CarouselNext/>
-</Carousel>
-      </div>
     </div>
   )
 }

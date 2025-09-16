@@ -10,7 +10,7 @@ import HttpError from "../utils/HttpError.js";
 
 export const create_product = async (req, res, next) => {
   try {
-    const product = await addProduct(req.user._id, req.body);
+    const product = await addProduct(req.user.id, req.body);
     res.status(201).json(product);
   } catch (error) {
     next(HttpError.badRequest(error.message || "Failed to create product"));
@@ -19,7 +19,7 @@ export const create_product = async (req, res, next) => {
 
 export const get_products = async (req, res, next) => {
   try {
-    const products = await listMyProducts(req.user._id);
+    const products = await listMyProducts(req.user.id);
     res.status(200).json(products);
   } catch (error) {
     next(HttpError.badRequest(error.message || "Failed to fetch products"));
@@ -37,7 +37,7 @@ export const get_public_products = async (req, res, next) => {
 
 export const get_product = async (req, res, next) => {
   try {
-    const product = await getMyProduct(req.user._id, req.params.id);
+    const product = await getMyProduct(req.user.id, req.params.id);
     res.status(200).json(product);
   } catch (error) {
     next(HttpError.notFound(error.message || "Product not found"));
@@ -46,7 +46,7 @@ export const get_product = async (req, res, next) => {
 
 export const update_product = async (req, res, next) => {
   try {
-    const product = await updateMyProduct(req.user._id, req.params.id, req.body);
+    const product = await updateMyProduct(req.user.id, req.params.id, req.body);
     res.status(200).json(product);
   } catch (error) {
     next(HttpError.badRequest(error.message || "Failed to update product"));
@@ -55,7 +55,7 @@ export const update_product = async (req, res, next) => {
 
 export const delete_product = async (req, res, next) => {
   try {
-    await removeMyProduct(req.user._id, req.params.id);
+    await removeMyProduct(req.user.id, req.params.id);
     res.status(200).json({ message: "Product deleted" });
   } catch (error) {
     next(HttpError.badRequest(error.message || "Failed to delete product"));
@@ -70,5 +70,3 @@ export default {
   update_product,
   delete_product,
 };
-
-

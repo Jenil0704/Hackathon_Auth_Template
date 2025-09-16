@@ -1,14 +1,15 @@
 import { registerUser, loginUser, verify_Otp, reset_password, forgot_password } from "../services/authServices.js"
 import { cookieOptions } from "../config/config.js";
 import HttpError from "../utils/HttpError.js";
-import User from "../models/User.js";
 import {sendMail} from "../utils/mailer.js"; // your nodemailer setup
 
+/**
+ * Starts registration by generating an OTP and emailing it to the user.
+ */
 const register_user = async(req,res,next)=> {
     const {name, email, password} = req.body;
     try{
         const {otp, email : userEmail} = await registerUser(name,email,password);
-        // Send OTP email
         await sendMail(userEmail, "Your OTP Code", `Your OTP is: ${otp}`);
         res.status(200).json({message : "OTP Sent Successfully. Please verify to complete registration."});
     }
@@ -17,18 +18,15 @@ const register_user = async(req,res,next)=> {
     }
 }
 
+/**
+ * Logs in a user against PostgreSQL users table, sets auth cookie.
+ */
 const login_user = async(req,res,next)=> {
     const {email, password} = req.body;
     try{
         const {token, user} = await loginUser(email,password);
         req.user = user;
-        
-        console.log("Setting cookie with token:", token);
-        console.log("Cookie options:", cookieOptions);
-        
         res.cookie("accessToken", token, cookieOptions);
-        
-        console.log("Cookie set successfully");
         res.status(200).json({message : "Login Success"}); 
     }
     catch(error){
@@ -41,19 +39,15 @@ const logout_user = async(req,res)=> {
     res.status(200).json({message: "Logout Successful"});
 };
 
-
+/**
+ * Verifies registration OTP, sets auth cookie, and returns created user.
+ */
 const verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
   try {
-    const {token, user} = await verify_Otp(email, otp);
+    const {token, user} = await verify_Otp(email, otp, "register");
     req.user = user;
-
-    console.log("Verify Token - Setting cookie with token:", token);
-    console.log("Verify Token - Cookie options:", cookieOptions);
-
     res.cookie("accessToken", token, cookieOptions);
-    console.log('Token Set Sucessfully in controller', token)
-
     res.status(200).json({ message: "User verified & registered successfully", user });
   } catch (err) {
     console.error(err);
@@ -71,7 +65,6 @@ const forgotPassword = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 const resetPassword = async (req, res) => {
   try {

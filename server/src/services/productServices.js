@@ -21,7 +21,7 @@ export const listPublicProducts = async () => {
 
 export const getMyProduct = async (userId, productId) => {
   const product = await findProductById(productId);
-  if (!product || String(product.user_id) !== String(userId)) {
+  if (!product || Number(product.user_id) !== Number(userId)) {
     throw new Error("Product not found");
   }
   return product;
@@ -29,7 +29,7 @@ export const getMyProduct = async (userId, productId) => {
 
 export const updateMyProduct = async (userId, productId, payload) => {
   const product = await findProductById(productId);
-  if (!product || String(product.user_id) !== String(userId)) {
+  if (!product || Number(product.user_id) !== Number(userId)) {
     throw new Error("Product not found or unauthorized");
   }
   return updateProductById(productId, payload);
@@ -37,7 +37,7 @@ export const updateMyProduct = async (userId, productId, payload) => {
 
 export const removeMyProduct = async (userId, productId) => {
   const product = await findProductById(productId);
-  if (!product || String(product.user_id) !== String(userId)) {
+  if (!product || Number(product.user_id) !== Number(userId)) {
     throw new Error("Product not found or unauthorized");
   }
   await deleteProductById(productId);
