@@ -101,8 +101,7 @@ export const updateProductById = async (productId, updateData) => {
   values.push(productId);
 
   const query = {
-    text: `UPDATE products SET ${setFragments.join(", ")}, updated_at = NOW() WHERE id = $$
-{fields.length + 1} RETURNING *`.replace("\n", ""),
+    text: `UPDATE products SET ${setFragments.join(", ")}, updated_at = NOW() WHERE id = $${fields.length + 1} RETURNING *`,
     values,
   };
   const { rows } = await pool.query(query);

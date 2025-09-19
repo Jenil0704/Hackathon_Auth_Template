@@ -95,7 +95,7 @@ const ProfilePage = () => {
   const handleUpdateProduct = async (id, updates) => {
     try {
       const updated = await updateProduct(axiosInstance, id, updates);
-      setProducts(prev => prev.map(p => p._id === id ? updated : p));
+      setProducts(prev => prev.map(p => p.id === id ? updated : p));
     } catch (err) {
       alert(err?.response?.data?.message || err?.message || "Failed to update product");
     }
@@ -104,14 +104,14 @@ const ProfilePage = () => {
   const handleDeleteProduct = async (id) => {
     try {
       await deleteProduct(axiosInstance, id);
-      setProducts(prev => prev.filter(p => p._id !== id));
+      setProducts(prev => prev.filter(p => p.id !== id));
     } catch (err) {
       alert(err?.response?.data?.message || err?.message || "Failed to delete product");
     }
   };
 
   const startEditProduct = (product) => {
-    setEditProductId(product._id);
+    setEditProductId(product.id);
     setEditForm({
       name: product.name || "",
       description: product.description || "",
@@ -260,24 +260,24 @@ const ProfilePage = () => {
       <h2 className="text-xl font-bold mb-4">My Products</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
         {products.map(p => (
-          <div key={p._id} className="border rounded-xl p-4">
+          <div key={p.id} className="border rounded-xl p-4">
             <div className="flex justify-between items-center">
               <h3 className="font-semibold">{p.name}</h3>
               <div className="space-x-2">
-                <button onClick={() => handleUpdateProduct(p._id, { is_active: !p.is_active })} className="px-3 py-1 rounded bg-yellow-500 text-white">{p.is_active ? 'Deactivate' : 'Activate'}</button>
-                {editProductId === p._id ? (
+                <button onClick={() => handleUpdateProduct(p.id, { is_active: !p.is_active })} className="px-3 py-1 rounded bg-yellow-500 text-white">{p.is_active ? 'Deactivate' : 'Activate'}</button>
+                {editProductId === p.id ? (
                   <>
-                    <button onClick={() => saveEditProduct(p._id)} className="px-3 py-1 rounded bg-green-600 text-white">Save</button>
+                    <button onClick={() => saveEditProduct(p.id)} className="px-3 py-1 rounded bg-green-600 text-white">Save</button>
                     <button onClick={cancelEditProduct} className="px-3 py-1 rounded bg-gray-400 text-white">Cancel</button>
                   </>
                 ) : (
                   <button onClick={() => startEditProduct(p)} className="px-3 py-1 rounded bg-blue-600 text-white">Edit</button>
                 )}
-                <button onClick={() => handleDeleteProduct(p._id)} className="px-3 py-1 rounded bg-red-500 text-white">Delete</button>
+                <button onClick={() => handleDeleteProduct(p.id)} className="px-3 py-1 rounded bg-red-500 text-white">Delete</button>
               </div>
             </div>
 
-            {editProductId === p._id ? (
+            {editProductId === p.id ? (
               <div className="mt-3 grid grid-cols-1 gap-2">
                 <input className="border p-2 rounded" name="name" value={editForm.name} onChange={(e)=>setEditForm({...editForm,[e.target.name]:e.target.value})} placeholder="Name" />
                 <input className="border p-2 rounded" name="price" value={editForm.price} onChange={(e)=>setEditForm({...editForm,[e.target.name]:e.target.value})} placeholder="Price" />

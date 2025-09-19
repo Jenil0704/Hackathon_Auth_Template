@@ -1,51 +1,11 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import InputField from "./InputField.jsx";
-import { loginUser } from "../api/auth.js";
-import { useNavigate } from "react-router-dom"
-import { z } from "zod";
 import { Loader2 } from "lucide-react";
-
-const schema = z.object({
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-});
+import { useLogin } from "../hooks/useLogin.js";
 
 
 export default function Login() {
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  
-  const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setSuccess(false);
-
-    const result = schema.safeParse(formData);
-
-      try {
-        const data = await loginUser(formData.email, formData.password)
-        navigate('/');
-        setSuccess(true)
-        setErrors("")
-        setFormData({ email: '', password: '' })
-        console.log(data);
-      } catch (err) {
-        const backendMessage = err?.response?.data?.message;
-        const networkMessage = err?.message;
-        setErrors(backendMessage || networkMessage || 'Login failed. Please try again.');
-      } finally {
-        setLoading(false)
-      }
-  };
+  const { formData, errors, loading, handleChange, handleSubmit } = useLogin();
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -82,10 +42,10 @@ export default function Login() {
           
           <button
             type="submit"
-            className="w-full py-2 text-white rounded-lg hover:bg-primary/90 transition"
+            className="w-full bg-black py-2 text-white rounded-lg hover:bg-primary/90 transition"
             disabled={loading}
           >
-            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {loading && <Loader2 className="w-full h-4 animate-spin" />}
             {!loading && "Login"}
           </button>
           {errors && (
